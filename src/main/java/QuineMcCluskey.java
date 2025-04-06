@@ -41,10 +41,12 @@ public class QuineMcCluskey {
 	 * @param args command line arguments (not used)
 	 */
 	public static void main(String[] args) {
+		
+		for (int i = 0; i < 30; i++) {
 		setupFile("E:\\Categorization modeling project\\4-values.csv", (int) Math.pow(2, NUM_VARS));
 
 		runOnFile("E:\\Categorization modeling project\\4-values.csv");
-
+		}
 		// runTest();
 	}
 
@@ -102,23 +104,28 @@ public class QuineMcCluskey {
 				getAdditionalEssentialPrimeImplicants(essentialPrimeImplicants, primeImplicantChart, item.minTerms);
 
 				StringBuilder output = new StringBuilder();
+				
+				output.append("\"" + essentialPrimeImplicants.toString() + "\",");
+				
 				boolean first = true;
 				for (String essentialPrimeImplicant : essentialPrimeImplicants) {
 					if (!first)
 						output.append("v");
 					first = false;
 					output.append("(");
+					StringBuilder conjunction = new StringBuilder();
 					for (int j = 0; j < essentialPrimeImplicant.length(); j++) {
 						if (essentialPrimeImplicant.charAt(j) == '1') {
-							if (j != 0)
-								output.append("&");
-							output.append(variableNames.charAt(j));
+							if (conjunction.length() != 0)
+								conjunction.append("&");
+							conjunction.append(variableNames.charAt(j));
 						} else if (essentialPrimeImplicant.charAt(j) == '0') {
-							if (j != 0)
-								output.append("&");
-							output.append("!" + variableNames.charAt(j));
+							if (conjunction.length() != 0)
+								conjunction.append("&");
+							conjunction.append("!" + variableNames.charAt(j));
 						}
 					}
+					output.append(conjunction);
 					output.append(")");
 				}
 
@@ -266,7 +273,7 @@ public class QuineMcCluskey {
 					recentKey = minTermCoverages.get(j).getKey();
 				}
 			}
-			if (count == 1)
+			if (count == 1 && !essentialPrimeImplicants.contains(recentKey))
 				essentialPrimeImplicants.add(recentKey);
 		}
 
@@ -303,7 +310,8 @@ public class QuineMcCluskey {
 						recentKey = primeImplicant;
 				}
 			}
-			essentialPrimeImplicants.add(recentKey);
+			if (!essentialPrimeImplicants.contains(recentKey))
+				essentialPrimeImplicants.add(recentKey);
 		}
 	}
 
