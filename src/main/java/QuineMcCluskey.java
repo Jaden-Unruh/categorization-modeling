@@ -4,7 +4,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,25 +14,52 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Quine-McCluskey algorithm implementation for minimizing boolean functions
+ * given truth-tables/minterms
+ * 
+ * This program reads a csv file containing minterms in the first columns and
+ * outputs the minimized boolean function to the next column.
+ * 
+ * @author Jaden Unruh
+ */
 public class QuineMcCluskey {
-	
+
+	/**
+	 * The variable names used in the output.
+	 */
 	static String variableNames = "ABCDEFG";
-	
+
+	/**
+	 * The number of variables in the boolean function.
+	 */
 	static final int NUM_VARS = 4;
 
+	/**
+	 * The main method to run the program.
+	 * 
+	 * @param args command line arguments (not used)
+	 */
 	public static void main(String[] args) {
-		setupFile("E:\\Categorization modeling project\\4-values.csv", 16);
-		
+		setupFile("E:\\Categorization modeling project\\4-values.csv", (int) Math.pow(2, NUM_VARS));
+
 		runOnFile("E:\\Categorization modeling project\\4-values.csv");
-		
-		//runTest();
+
+		// runTest();
 	}
-	
+
+	/**
+	 * Sets up a CSV file with all possible combinations of binary values for the
+	 * given number of variables.
+	 * 
+	 * @param path      the path to the file to create
+	 * @param numValues the number of potential minterms (2^NUM_VARS)
+	 */
 	private static void setupFile(String path, int numValues) {
 		try {
 			File file = new File(path);
 			file.createNewFile();
-			
+
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 			for (int i = 0; i < Math.pow(2, numValues); i++) {
 				StringBuilder binary = new StringBuilder(Integer.toBinaryString(i));
@@ -49,25 +75,32 @@ public class QuineMcCluskey {
 				writer.newLine();
 			}
 			writer.close();
-		} catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
+	/**
+	 * Reads a file containing minterms and applies the Quine-McCluskey algorithm on
+	 * each line, outputting to the next column
+	 * 
+	 * @param path the path to the file to read
+	 */
 	private static void runOnFile(String path) {
 		try {
 			List<String> lines = Files.readAllLines(Paths.get(path));
 			ArrayList<MinTerms> toDo = new ArrayList<>();
 			for (String line : lines)
 				toDo.add(new MinTerms(line));
-			
+
 			for (int i = 1; i < toDo.size(); i++) {
 				MinTerms item = toDo.get(i);
 				ArrayList<String> primeImplicants = getPrimeImplicants(item.minTerms);
 				Map<String, String> primeImplicantChart = createPrimeImplicantChart(primeImplicants, item.minTerms);
-				ArrayList<String> essentialPrimeImplicants = getEssentialPrimeImplicants(primeImplicantChart, item.minTerms);
+				ArrayList<String> essentialPrimeImplicants = getEssentialPrimeImplicants(primeImplicantChart,
+						item.minTerms);
 				getAdditionalEssentialPrimeImplicants(essentialPrimeImplicants, primeImplicantChart, item.minTerms);
-				
+
 				StringBuilder output = new StringBuilder();
 				boolean first = true;
 				for (String essentialPrimeImplicant : essentialPrimeImplicants) {
@@ -88,7 +121,7 @@ public class QuineMcCluskey {
 					}
 					output.append(")");
 				}
-				
+
 				String originalLineContent = lines.get(i);
 				lines.set(i, originalLineContent + output.toString());
 			}
@@ -97,7 +130,13 @@ public class QuineMcCluskey {
 			e.printStackTrace();
 		}
 	}
-	
+
+	/**
+	 * A test method to run the algorithm with hardcoded minterms and print the
+	 * results.
+	 * 
+	 * Based on the values used in the example on the Wikipedia Page
+	 */
 	private static void runTest() {
 		ArrayList<String> minTerms = new ArrayList<>();
 		minTerms.add("0100");
@@ -108,7 +147,7 @@ public class QuineMcCluskey {
 		minTerms.add("1011");
 		minTerms.add("1110");
 		minTerms.add("1111");
-		
+
 		ArrayList<String> strictMinTerms = new ArrayList<>();
 		strictMinTerms.add("0100");
 		strictMinTerms.add("1000");
@@ -116,68 +155,81 @@ public class QuineMcCluskey {
 		strictMinTerms.add("1100");
 		strictMinTerms.add("1011");
 		strictMinTerms.add("1111");
-		
 
 		ArrayList<String> primeImplicants = getPrimeImplicants(minTerms);
 
 		System.out.println(primeImplicants);
-		
+
 		Map<String, String> primeImplicantChart = createPrimeImplicantChart(primeImplicants, strictMinTerms);
-		
+
 		System.out.println("\n\nPrime Implicant Chart:");
 		for (Map.Entry<String, String> entry : primeImplicantChart.entrySet()) {
 			System.out.println(entry.getKey() + " : " + entry.getValue());
 		}
-		
+
 		ArrayList<String> essentialPrimeImplicants = getEssentialPrimeImplicants(primeImplicantChart, strictMinTerms);
 		System.out.println("\n\nFirst-order essential Prime Implicants:");
 		System.out.println(essentialPrimeImplicants);
-		
+
 		getAdditionalEssentialPrimeImplicants(essentialPrimeImplicants, primeImplicantChart, strictMinTerms);
 		System.out.println("\n\nAll essential Prime Implicants:");
 		System.out.println(essentialPrimeImplicants);
 	}
-	
-   private static ArrayList<String> getPrimeImplicants(ArrayList<String> minTerms) {
-	   System.out.println("\n\nminTerms: " + minTerms);
-	   ArrayList<String> primeImplicants = new ArrayList<>();
-	   ArrayList<Boolean> merges = new ArrayList<>();
+
+	/**
+	 * Recursively finds all prime implicants from the given minterms.
+	 * 
+	 * @param minTerms the list of minterms to find prime implicants from
+	 * @return a list of prime implicants
+	 */
+	private static ArrayList<String> getPrimeImplicants(ArrayList<String> minTerms) {
+		System.out.println("\n\nminTerms: " + minTerms);
+		ArrayList<String> primeImplicants = new ArrayList<>();
+		ArrayList<Boolean> merges = new ArrayList<>();
 		while (merges.size() < minTerms.size())
 			merges.add(false);
-	   
-	   int numberOfMerges = 0;
-	   
-	   for (int i = 0; i < minTerms.size(); i++)
-		   for (int c = i + 1; c < minTerms.size(); c++) {
-			   String minTerm1 = minTerms.get(i), minTerm2 = minTerms.get(c);
-			   
-			   if (checkDashesAlign(minTerm1, minTerm2) && checkMinTermDifference(minTerm1, minTerm2)) {
-				   String mergedMinTerm = mergeMinTerms(minTerm1, minTerm2);
-				   if (!primeImplicants.contains(mergedMinTerm))
-					   primeImplicants.add(mergedMinTerm);
-				   merges.set(i, true);
-				   merges.set(c, true);
-				   numberOfMerges++;
-			   }
-		   }
-	   
+
+		int numberOfMerges = 0;
+
+		for (int i = 0; i < minTerms.size(); i++)
+			for (int c = i + 1; c < minTerms.size(); c++) {
+				String minTerm1 = minTerms.get(i), minTerm2 = minTerms.get(c);
+
+				if (checkDashesAlign(minTerm1, minTerm2) && checkMinTermDifference(minTerm1, minTerm2)) {
+					String mergedMinTerm = mergeMinTerms(minTerm1, minTerm2);
+					if (!primeImplicants.contains(mergedMinTerm))
+						primeImplicants.add(mergedMinTerm);
+					merges.set(i, true);
+					merges.set(c, true);
+					numberOfMerges++;
+				}
+			}
+
 		for (int i = 0; i < minTerms.size(); i++)
 			if (!merges.get(i) && !primeImplicants.contains(minTerms.get(i)))
 				primeImplicants.add(minTerms.get(i));
-	   
+
 		if (numberOfMerges > 0)
 			return getPrimeImplicants(primeImplicants);
 		else
 			return primeImplicants;
 	}
-   
-   private static Map<String, String> createPrimeImplicantChart(ArrayList<String> primeImplicants, ArrayList<String> minTerms) {
-	   HashMap<String, String> primeImplicantChart = new HashMap<>();
-	   for (int i = 0; i < primeImplicants.size(); i++)
-		   primeImplicantChart.put(primeImplicants.get(i), "");
-	   
-	   for (String primeImplicant : primeImplicantChart.keySet()) {
-		   Pattern regex = convertToRegularExpression(primeImplicant);
+
+	/**
+	 * Creates a prime implicant chart from the given prime implicants and minterms.
+	 * 
+	 * @param primeImplicants the list of prime implicants
+	 * @param minTerms        the list of minterms
+	 * @return a map representing the prime implicant chart
+	 */
+	private static Map<String, String> createPrimeImplicantChart(ArrayList<String> primeImplicants,
+			ArrayList<String> minTerms) {
+		HashMap<String, String> primeImplicantChart = new HashMap<>();
+		for (int i = 0; i < primeImplicants.size(); i++)
+			primeImplicantChart.put(primeImplicants.get(i), "");
+
+		for (String primeImplicant : primeImplicantChart.keySet()) {
+			Pattern regex = convertToRegularExpression(primeImplicant);
 			for (int j = 0; j < minTerms.size(); j++) {
 				String minTerm = minTerms.get(j);
 				if (regex.matcher(minTerm).matches())
@@ -185,32 +237,48 @@ public class QuineMcCluskey {
 				else
 					primeImplicantChart.put(primeImplicant, primeImplicantChart.get(primeImplicant) + "0");
 			}
-	   }
-	   
-	   return primeImplicantChart;
-   }
-   
-   private static ArrayList<String> getEssentialPrimeImplicants(Map<String, String> primeImplicantChart, ArrayList<String> minTerms) {
-	   ArrayList<String> essentialPrimeImplicants = new ArrayList<>();
-	   ArrayList<Entry<String, String>> minTermCoverages = new ArrayList<>(primeImplicantChart.entrySet());
-	   
-	   for (int i = 0; i < minTermCoverages.get(0).getValue().length(); i++) {
-		   int count = 0;
-		   String recentKey = "";
-		   for (int j = 0; j < minTermCoverages.size(); j++) {
-               String coverage = minTermCoverages.get(j).getValue();
-               if (coverage.charAt(i) == '1') {
-                   count++;
-                   recentKey = minTermCoverages.get(j).getKey();
-               }
-           }
-		   if (count == 1)
-			   essentialPrimeImplicants.add(recentKey);
-	   }
-	   
-	   return essentialPrimeImplicants;
-   }
-   
+		}
+
+		return primeImplicantChart;
+	}
+
+	/**
+	 * Finds the essential prime implicants from the prime implicant chart and
+	 * minterms. Only finds the 'first-order' essential prime implicants, those with a corresponding minterm only reflected by one prime implicant.
+	 * 
+	 * @param primeImplicantChart the prime implicant chart
+	 * @param minTerms            the list of minterms
+	 * @return a list of essential prime implicants
+	 * @see #getAdditionalEssentialPrimeImplicants
+	 */
+	private static ArrayList<String> getEssentialPrimeImplicants(Map<String, String> primeImplicantChart,
+			ArrayList<String> minTerms) {
+		ArrayList<String> essentialPrimeImplicants = new ArrayList<>();
+		ArrayList<Entry<String, String>> minTermCoverages = new ArrayList<>(primeImplicantChart.entrySet());
+
+		for (int i = 0; i < minTermCoverages.get(0).getValue().length(); i++) {
+			int count = 0;
+			String recentKey = "";
+			for (int j = 0; j < minTermCoverages.size(); j++) {
+				String coverage = minTermCoverages.get(j).getValue();
+				if (coverage.charAt(i) == '1') {
+					count++;
+					recentKey = minTermCoverages.get(j).getKey();
+				}
+			}
+			if (count == 1)
+				essentialPrimeImplicants.add(recentKey);
+		}
+
+		return essentialPrimeImplicants;
+	}
+
+	/**
+	 * Finds additional essential prime implicants from the prime implicant chart - those that are still required to cover minterms that were not covered by {@link #getEssentialPrimeImplicants(Map, ArrayList)}
+	 * @param essentialPrimeImplicants the list of essential prime implicants
+	 * @param primeImplicantChart the prime implicant chart
+	 * @param minTerms the list of minterms
+	 */
 	private static void getAdditionalEssentialPrimeImplicants(ArrayList<String> essentialPrimeImplicants,
 			Map<String, String> primeImplicantChart, ArrayList<String> minTerms) {
 		for (String essentialPrimeImplicant : essentialPrimeImplicants) {
@@ -219,11 +287,11 @@ public class QuineMcCluskey {
 				if (coverage.charAt(i) == '1')
 					minTerms.set(i, null);
 		}
-		
+
 		for (int i = 0; i < minTerms.size(); i++) {
 			if (minTerms.get(i) == null)
 				continue;
-			
+
 			int count = -1;
 			String recentKey = "";
 			for (int j = 0; j < primeImplicantChart.size(); j++) {
@@ -238,8 +306,14 @@ public class QuineMcCluskey {
 			essentialPrimeImplicants.add(recentKey);
 		}
 	}
-   
-   private static Pattern convertToRegularExpression(String primeImplicant) {
+
+	/**
+	 * Converts a prime implicant string to a regular expression pattern.
+	 * 
+	 * @param primeImplicant the prime implicant string
+	 * @return the regular expression pattern
+	 */
+	private static Pattern convertToRegularExpression(String primeImplicant) {
 		StringBuilder regex = new StringBuilder();
 		for (int i = 0; i < primeImplicant.length(); i++)
 			if (primeImplicant.charAt(i) == '-')
@@ -247,23 +321,44 @@ public class QuineMcCluskey {
 			else
 				regex.append(primeImplicant.charAt(i));
 		return Pattern.compile(regex.toString());
-   }
-   
-   private static boolean checkDashesAlign(String minTerm1, String minTerm2) {
-	   for (int i = 0; i < minTerm1.length(); i++)
+	}
+	
+	/**
+	 * Checks if the dashes in two minterms align.
+	 * 
+	 * @param minTerm1 the first minterm
+	 * @param minTerm2 the second minterm
+	 * @return true if the dashes align, false otherwise
+	 */
+	private static boolean checkDashesAlign(String minTerm1, String minTerm2) {
+		for (int i = 0; i < minTerm1.length(); i++)
 			if (minTerm1.charAt(i) == '-' && minTerm2.charAt(i) != '-')
 				return false;
-	   return true;
-   }
-   
-   private static boolean checkMinTermDifference(String minTerm1, String minTerm2) {
-	   int intMinTerm1 = Integer.parseInt(minTerm1.replace("-", "0"), 2);
-	   int intMinTerm2 = Integer.parseInt(minTerm2.replace("-", "0"), 2);
-	   
-	   int res = intMinTerm1 ^ intMinTerm2;
-	   return res != 0 && (res & (res - 1)) == 0;
-   }
-   
+		return true;
+	}
+
+	/**
+	 * Checks if the two minterms differ by only one bit.
+	 * 
+	 * @param minTerm1 the first minterm
+	 * @param minTerm2 the second minterm
+	 * @return true if they differ by one bit, false otherwise
+	 */
+	private static boolean checkMinTermDifference(String minTerm1, String minTerm2) {
+		int intMinTerm1 = Integer.parseInt(minTerm1.replace("-", "0"), 2);
+		int intMinTerm2 = Integer.parseInt(minTerm2.replace("-", "0"), 2);
+
+		int res = intMinTerm1 ^ intMinTerm2;
+		return res != 0 && (res & (res - 1)) == 0;
+	}
+
+	/**
+	 * Merges two minterms into one by replacing the differing bit with a dash.
+	 * 
+	 * @param minTerm1 the first minterm
+	 * @param minTerm2 the second minterm
+	 * @return the merged minterm
+	 */
 	private static String mergeMinTerms(String minTerm1, String minTerm2) {
 		StringBuilder mergedMinTerm = new StringBuilder();
 		for (int i = 0; i < minTerm1.length(); i++)
@@ -275,9 +370,22 @@ public class QuineMcCluskey {
 	}
 }
 
+/**
+ * A class representing minterms in their binary representations.
+ * 
+ * @author Jaden Unruh
+ */
 class MinTerms {
+	/**
+	 * The list of minterms in binary representation.
+	 */
 	ArrayList<String> minTerms = new ArrayList<>();
-	
+
+	/**
+	 * Constructor that takes a line from the file and parses it into minterms.
+	 * 
+	 * @param fileLine the line from the file
+	 */
 	MinTerms(String fileLine) {
 		fileLine = fileLine.replaceAll(",", "");
 		for (int i = 0; i < fileLine.length(); i++)
