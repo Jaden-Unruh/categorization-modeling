@@ -4,6 +4,50 @@
   <artifactId>categorization-modeling</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>Categorization Modeling Research Project</name>
+  <description>Research project seeking to model categorization decision making behavior.</description>
+  <url>https://github.com/Jaden-Unruh/categorization-modeling/</url>
+  <inceptionYear>2025</inceptionYear>
+  
+  <organization>
+  	<name>University of Washington</name>
+  	<url>http://www.washington.edu</url>
+  </organization>
+  
+  <developers>
+  	<developer>
+  		<id>jadenu</id>
+  		<name>Jaden Unruh</name>
+  		<email>jadenu@uw.edu</email>
+  		<organization>University of Washington; Department of Philosophy</organization>
+  		<organizationUrl>http://phil.washington.edu</organizationUrl>
+  		<roles>
+  			<role>developer</role>
+  		</roles>
+  		<timezone>America/Los_Angeles</timezone>
+  	</developer>
+  </developers>
+  
+  <contributors>
+  	<contributor>
+  		<name>Conor Mayo-Wilson</name>
+  		<email>conormw@uw.edu</email>
+  		<organization>University of Washington; Department of Philosophy</organization>
+  		<organizationUrl>http://phil.washington.edu</organizationUrl>
+  		<roles>
+  			<role>Advisor</role>
+  		</roles>
+  		<timezone>America/Los_Angeles</timezone>
+  	</contributor>
+  </contributors>
+  
+  <licenses>
+  	<license>
+  		<name>GPL-3.0-or-later</name>
+  		<url>https://opensource.org/licenses/GPL-3.0</url>
+  		<distribution>repo</distribution>
+  		<comments>GNU General Public License v3.0; a strong copyleft license</comments>
+  	</license>
+  </licenses>
   
   <dependencies>
 	  <dependency>
