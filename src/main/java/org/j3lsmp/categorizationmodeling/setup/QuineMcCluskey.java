@@ -1,3 +1,5 @@
+package org.j3lsmp.categorizationmodeling.setup;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -33,7 +35,7 @@ public class QuineMcCluskey {
 	/**
 	 * The number of variables in the boolean function.
 	 */
-	static final int NUM_VARS = 4;
+	static final int NUM_VARS = 3;
 
 	/**
 	 * The main method to run the program.
@@ -42,11 +44,9 @@ public class QuineMcCluskey {
 	 */
 	public static void main(String[] args) {
 		
-		for (int i = 0; i < 30; i++) {
-		setupFile("E:\\Categorization modeling project\\4-values.csv", (int) Math.pow(2, NUM_VARS));
+		setupFile("E:\\Categorization modeling project\\3-values.csv", (int) Math.pow(2, NUM_VARS));
 
-		runOnFile("E:\\Categorization modeling project\\4-values.csv");
-		}
+		runOnFile("E:\\Categorization modeling project\\3-values.csv");
 		// runTest();
 	}
 
@@ -58,6 +58,7 @@ public class QuineMcCluskey {
 	 * @param numValues the number of potential minterms (2^NUM_VARS)
 	 */
 	private static void setupFile(String path, int numValues) {
+		System.out.printf("Setting up file with %f rows for truth tables of %f lines\n", Math.pow(2, Math.pow(2, NUM_VARS)), Math.pow(2, NUM_VARS));
 		try {
 			File file = new File(path);
 			file.createNewFile();
@@ -190,7 +191,7 @@ public class QuineMcCluskey {
 	 * @return a list of prime implicants
 	 */
 	private static ArrayList<String> getPrimeImplicants(ArrayList<String> minTerms) {
-		System.out.println("\n\nminTerms: " + minTerms);
+		System.out.println("minTerms: " + minTerms);
 		ArrayList<String> primeImplicants = new ArrayList<>();
 		ArrayList<Boolean> merges = new ArrayList<>();
 		while (merges.size() < minTerms.size())
