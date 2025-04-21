@@ -21,4 +21,4 @@ Whenever the user receives new information (i.e. is told that a particular 'Alie
 Whenever we want to make a prediction about how the agent would respond to a particular 'alien', we iterate through each hypothesis, and, if that hypothesis would determine that this particular 'alien' is 'evil', we add its weight to a running total. After all hypotheses, we have a number between 0 and 1 that represents this model's confidence that the given 'alien' is 'evil'.
 
 ### Testing
-This model was tested against data from (Kristian Tylén et al)[https://doi.org/10.1111/cogs.13338], updating the model for each decision the test subjects made and predicting their next decision. In a preliminary test, the model correctly predicted the decision made in 13,196 of 16,224 trials, about 81.3%.
+This model was tested against data from [Kristian Tylén et al](https://doi.org/10.1111/cogs.13338), updating the model for each decision the test subjects made and predicting their next decision. In a preliminary test, the model correctly predicted the decision made in 13,196 of 16,224 trials, about 81.3%.
