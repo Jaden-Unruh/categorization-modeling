@@ -1,12 +1,11 @@
 package org.j3lsmp.categorizationmodeling;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,9 +15,11 @@ import org.apache.commons.lang3.StringUtils;
 public class Model {
 	static int numVars = 4;
 
-	static final double CONFIDENCE_FACTOR = 0.1;
-
+	static double CONFIDENCE_FACTOR = 0.1;
+	
 	static double[] weights = new double[(int) Math.pow(2, Math.pow(2, numVars))];
+	
+	static double[] INITIAL_WEIGHTS = new double[(int) Math.pow(2, Math.pow(2, numVars))];
 
 	/**
 	 * Complexity of each hypothesis - 1 is most complex, i.e. 4 PIs with no dashes,
@@ -26,16 +27,16 @@ public class Model {
 	 */
 	static double[] complexity = new double[(int) Math.pow(2, Math.pow(2, numVars))];
 
-	final static double[] numImplicantVals = { 0, .2, .4, .5, .6, .7, .8, .9, 1 };
-	final static double[] avgDashesVals = { 1, .8, .6, .4, .2 };
+	static double[] numImplicantVals = { 0, .2, .4, .5, .6, .7, .8, .9, 1 };
+	static double[] avgDashesVals = { 1, .8, .6, .4, .2 };
 
 	final static Pattern PI_REGEX = Pattern.compile("\\[.*\\]");
 	final static Pattern DATA_LINE_REGEX = Pattern.compile(
 			"^\\d+,\\d+,(\\d+),\\d+,\\d+,\\d+,([01]{5})(?:pt)?\\.jpg,\\d,(\\d),(\\d),\\d,\\d,[^,]+,\\d+,[^,]+,[^,]+,[^,]+,[^,]+$");
 
-	static void initializeWeights(String valuesFileName) throws IOException {
+	static void initializeWeights(double[] currWeights, String valuesFileName, boolean write) throws IOException {
 
-		List<String> lines = Files.readAllLines(Paths.get(valuesFileName));
+		List<String> lines = Files.readAllLines(Path.of(valuesFileName));
 
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i), primeImplicants;
@@ -63,19 +64,24 @@ public class Model {
 		double weightPer = 100d / totalComplexity;
 
 		for (int i = 0; i < complexity.length; i++) {
-			weights[i] = (1 - complexity[i]) * weightPer;
+			currWeights[i] = (1 - complexity[i]) * weightPer;
 		}
-
-		for (int i = 0; i < lines.size(); i++) {
-			StringBuilder sb = new StringBuilder(lines.get(i));
-			sb.append("," + complexity[i] + "," + weights[i]);
-			lines.set(i, sb.toString());
+		
+		System.out.println(Arrays.toString(currWeights));
+		
+		if (write) {
+			for (int i = 0; i < lines.size(); i++) {
+				StringBuilder sb = new StringBuilder(lines.get(i));
+				sb.append("," + complexity[i] + "," + weights[i]);
+				lines.set(i, sb.toString());
+			}
+	
+			Files.write(Path.of(valuesFileName), lines, StandardCharsets.UTF_8);
 		}
-
-		Files.write(Paths.get(valuesFileName), lines, StandardCharsets.UTF_8);
 	}
 
 	static double[] updateWeights(double[] currWeights, boolean[] traits, boolean isEvil) {
+		
 		for (int i = 0; i < currWeights.length; i++)
 			currWeights[i] *= isCorrect(i, traits, isEvil) ? 1 : CONFIDENCE_FACTOR;
 
@@ -100,13 +106,13 @@ public class Model {
 		return paddedBinary(row).charAt(indexFromTraits(traits)) == (isEvil ? '1' : '0');
 	}
 
-	static double getCertainty(boolean[] traits) {
+	static double getCertainty(double[] currWeights, boolean[] traits) {
 		double certainty = 0;
 		int index = indexFromTraits(traits);
 
-		for (int i = 0; i < weights.length; i++)
+		for (int i = 0; i < currWeights.length; i++)
 			if (paddedBinary(i).charAt(index) == '1')
-				certainty += weights[i];
+				certainty += currWeights[i];
 
 		return certainty;
 	}
@@ -136,41 +142,51 @@ public class Model {
 
 	public static void main(String[] args) {
 		try {
-			/*initializeWeights("E:\\Categorization modeling project\\4-values.csv");
-
-			boolean[] testTraits = { true, false, false, true };
-			updateWeights(weights, testTraits, true);
-
-			boolean[] testTraits2 = { true, false, true, true };
-
-			for (int i = 0; i < weights.length; i++)
-				System.out.printf("%s: %f\n", paddedBinary(i), weights[i]);
-
-			System.out.println(getCertainty(testTraits));
-			System.out.println(getCertainty(testTraits2));
-
-			updateWeights(weights, testTraits2, false);
-
-			boolean[] testTraits3 = { false, false, true, false };
-			boolean[] testTraits4 = { false, false, false, false };
-
-			System.out.println(getCertainty(testTraits3));
-			System.out.println(getCertainty(testTraits4));*/
-			
-			testModel("E:\\Categorization modeling project\\TylenEtAl\\Data\\AlienData.csv");
+			testModel("E:\\Categorization modeling project\\TylenEtAl\\Data\\AlienData.csv", true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+	
+	static double testModelValues(String path, double updateVal, double[] numImplicantVals, double[] numDashesVals, ArrayList<Session> sessions) throws IOException {
+		double[] currWeights = new double[(int) Math.pow(2, Math.pow(2, numVars))];
+		
+		if (!Arrays.equals(Model.numImplicantVals, numImplicantVals) || !Arrays.equals(Model.avgDashesVals, numDashesVals) || INITIAL_WEIGHTS[21] == 0) {
+			System.out.println("Values not equal - updating...");
+			Model.numImplicantVals = numImplicantVals;
+			Model.avgDashesVals = numDashesVals;
+			initializeWeights(currWeights, "E:\\Categorization modeling project\\4-values.csv", false);
+			INITIAL_WEIGHTS = currWeights.clone();
+		}
+		
+		Model.CONFIDENCE_FACTOR = updateVal;
+		
+		int correct = 0, total = 0;
+		
+		for (int i = 0; i < sessions.size(); i++) {
+			Session session = sessions.get(i);
+			currWeights = INITIAL_WEIGHTS.clone();
+			for (int j = 0; j < session.trials().size(); j++) {
+				Trial trial = session.trials().get(j);
+				if ((getCertainty(currWeights, trial.traits()) > 50d) == trial.response())
+					correct++;
+				total++;
+				
+				currWeights = updateWeights(currWeights, trial.traits(), trial.isDangerous());
+			}
+		}
+		
+		return (double) correct / total;
+	}
 
-	static void testModel(String path) throws IOException {
-		List<String> lines = Files.readAllLines(Paths.get(path));
+	static double testModel(String path, boolean doPrints) throws IOException {
+		List<String> lines = Files.readAllLines(Path.of(path));
 		
 		int correctCount = 0, totalCount = 0;
 		int lastSession = 1;
 
 		for (int i = 0; i < lines.size() - 1; ) {
-			initializeWeights("E:\\Categorization modeling project\\4-values.csv");
+			initializeWeights(weights, "E:\\Categorization modeling project\\4-values.csv", false);
 			while (i < lines.size() - 1) {
 				i++;
 				if (i % 1000 == 0)
@@ -191,13 +207,17 @@ public class Model {
 				}
 				
 				totalCount++;
-				if ((getCertainty(traits) > 50d) == response)
+				if ((getCertainty(weights, traits) > 50d) == response)
 					correctCount++;
+				
+				if (i < 104)
+					System.out.printf("Session 1, Trial %d: certainty = %f, response = %b\n", i, getCertainty(weights, traits), response);
 				
 				updateWeights(weights, traits, isDangerous);
 			}
 		}
-		
-		System.out.printf("Of %d trials, %d were predicted correctly, for a %f ratio", totalCount, correctCount, (double) correctCount / totalCount);
+		if (doPrints)
+			System.out.printf("Of %d trials, %d were predicted correctly, for a %f ratio", totalCount, correctCount, (double) correctCount / totalCount);
+		return (double) correctCount / totalCount;
 	}
 }

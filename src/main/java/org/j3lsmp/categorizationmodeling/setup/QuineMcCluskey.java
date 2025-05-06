@@ -6,7 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -91,7 +91,7 @@ public class QuineMcCluskey {
 	 */
 	private static void runOnFile(String path) {
 		try {
-			List<String> lines = Files.readAllLines(Paths.get(path));
+			List<String> lines = Files.readAllLines(Path.of(path));
 			ArrayList<MinTerms> toDo = new ArrayList<>();
 			for (String line : lines)
 				toDo.add(new MinTerms(line));
@@ -133,7 +133,7 @@ public class QuineMcCluskey {
 				String originalLineContent = lines.get(i);
 				lines.set(i, originalLineContent + output.toString());
 			}
-			Files.write(Paths.get(path), lines, StandardCharsets.UTF_8);
+			Files.write(Path.of(path), lines, StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
