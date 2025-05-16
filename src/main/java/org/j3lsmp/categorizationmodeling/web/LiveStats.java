@@ -6,7 +6,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * JSON builder for stats as viewed by admins
+ */
 class LiveStats {
+	/**
+	 * Builds a big JSON file to populate the admin stats table, using current information
+	 * @return the root json node of the stats file
+	 */
 	static JsonNode getUpdatedStats() {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();

@@ -12,6 +12,10 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Old model
+ * @deprecated web-1.0.0
+ */
 public class Model {
 	static int numVars = 4;
 
@@ -140,6 +144,10 @@ public class Model {
 		return ret;
 	}
 
+	/**
+	 * Entry method, tests the model. Unused as of web release.
+	 * @param args unused
+	 */
 	public static void main(String[] args) {
 		try {
 			testModel("E:\\Categorization modeling project\\TylenEtAl\\Data\\AlienData.csv", true);

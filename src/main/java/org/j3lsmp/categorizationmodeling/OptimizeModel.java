@@ -8,6 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 
+/**
+ * Model used to optimize certain values. Unused in actual deployment.
+ * @deprecated web-1.0.0
+ */
 public class OptimizeModel {
 	
 	static final String PATH = "E:\\Categorization modeling project\\TylenEtAl\\Data\\AlienData.csv";
@@ -23,8 +27,8 @@ public class OptimizeModel {
 	
 	/**
 	 * Ternary search to optimize the confidence factor. Assume results of model are continuous (probably true) and have only one peak (probably not true)
-	 * @param args
-	 * @throws IOException
+	 * @param args unused
+	 * @throws IOException if something goes wrong reading/writing
 	 */
 	public static void main(String[] args) throws IOException {
 		parseTrials(PATH);

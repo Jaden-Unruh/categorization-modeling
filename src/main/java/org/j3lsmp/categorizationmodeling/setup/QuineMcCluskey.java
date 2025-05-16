@@ -145,6 +145,7 @@ public class QuineMcCluskey {
 	 * 
 	 * Based on the values used in the example on the Wikipedia Page
 	 */
+	@SuppressWarnings("unused")
 	private static void runTest() {
 		ArrayList<String> minTerms = new ArrayList<>();
 		minTerms.add("0100");

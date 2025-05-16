@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Rest controller for authorization, handles backend of sign-in
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -22,11 +25,21 @@ public class AuthController {
 	private final AuthenticationManager authManager;
 	private final JwtUtil jwtUtil;
 	
+	/**
+	 * Basic authorization controller constructor
+	 * @param authManager the authentication manager to use
+	 * @param jwtUtil utilities class for authentication
+	 */
 	public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil) {
 		this.authManager = authManager;
 		this.jwtUtil = jwtUtil;
 	}
 	
+	/**
+	 * Handles post request to /login, returns a JWT token if successful or a 403 if failed
+	 * @param request a login request
+	 * @return ResponseEntity, with token or 403 error
+	 */
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 		try {
@@ -45,5 +58,10 @@ public class AuthController {
 		}
 	}
 	
+	/**
+	 * Holds a labeled username and password
+	 * @param username the username
+	 * @param password the password
+	 */
 	public record LoginRequest(String username, String password) {}
 }

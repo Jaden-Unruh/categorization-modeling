@@ -6,9 +6,17 @@ import org.springframework.stereotype.Controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/**
+ * Websocket controller. Be advised, I still haven't figured out websockets, and this doesn't work.
+ */
 @Controller
-public class WebSocketController {
+public class CmWebSocketController {
 	
+	/**
+	 * Maps /admin/stats requests to the internal /topic/adminStats websocket
+	 * @param node a jsonnode
+	 * @return the same node
+	 */
 	@MessageMapping("/admin/stats")
 	@SendTo("/topic/adminStats")
 	public JsonNode broadCastStats(JsonNode node) {

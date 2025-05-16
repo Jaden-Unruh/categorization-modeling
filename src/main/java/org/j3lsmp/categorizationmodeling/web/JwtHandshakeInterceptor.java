@@ -16,21 +16,30 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/**
+ * Websocket security. Still doesn't work as expected.
+ */
 @Component
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 	
 	private final JwtUtil jwtUtil;
 	private final UserDetailsService userDetailsService;
 	
+	/**
+	 * Basic constructor
+	 * @param jwtUtil JWT utilities to use
+	 * @param userDetailsService User Details to use
+	 */
 	public JwtHandshakeInterceptor(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
+		System.out.println("Interceptor constructed");
 	}
 
 	@Override
 	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
 			Map<String, Object> attributes) throws Exception {
-		
+		System.out.println("before handshake");
 		try {
 			URI uri = request.getURI();
 			MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(uri).build().getQueryParams();

@@ -1,23 +1,34 @@
 package org.j3lsmp.categorizationmodeling.web;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
+/**
+ * Websocket configuration changes. Recall, this doesn't work yet.
+ */
 @Configuration
-@EnableWebSocketMessageBroker
-public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
 	
-	@Override
-	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		registry.addEndpoint("/ws").setAllowedOrigins("*").withSockJS();
+	private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
+	private final CmWebSocketHandler webSocketHandler;
+	
+	/**
+	 * Basic constructor
+	 * @param jwtHandshakeInterceptor the handshake intercpetor to use
+	 * @param webSocketHandler the socket handler to use
+	 */
+	public WebSocketConfig(JwtHandshakeInterceptor jwtHandshakeInterceptor, CmWebSocketHandler webSocketHandler) {
+		this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
+		this.webSocketHandler = webSocketHandler;
 	}
 	
 	@Override
-	public void configureMessageBroker(MessageBrokerRegistry registry) {
-		registry.enableSimpleBroker("/topic");
-		registry.setApplicationDestinationPrefixes("/app");
+	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+		registry.addHandler(webSocketHandler, "/ws")
+			.addInterceptors(jwtHandshakeInterceptor)
+			.setAllowedOrigins("*"); // TODO: tighten in prod
 	}
 }

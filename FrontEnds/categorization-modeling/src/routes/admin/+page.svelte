@@ -1,7 +1,5 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { Client } from '@stomp/stompjs'
-    import SockJS from 'sockjs-client';
 
     let info = "Loading...";
     interface AdminStats {
@@ -16,6 +14,7 @@
     }
 
     let stats: Record<string, AdminStats> = {};
+
 
     onMount(async () => {
         const token = localStorage.getItem('jwt');
@@ -38,27 +37,31 @@
         stats = await res.json();
         info = "Welcome, admin.";
 
-        const socket = new SockJS(`/ws?token=${token}`);
-        const stompClient = new Client({
-            webSocketFactory: () => socket,
-            debug: str => console.log(str),
-            reconnectDelay: 5000,
-        });
-
-        stompClient.onConnect = (frame) => {
-            console.log('Connected to WebSocket:', frame);
-            stompClient.subscribe('/topic/adminStats', message => {
-                console.log('Received message:', message.body);
-            });
-        };
-
-        stompClient.onStompError = (frame) => {
-            console.error('Broker reported error:', frame.headers['message']);
-            console.error('Additional details:', frame.body);
-        };
-
-        stompClient.activate();
+        connectWebSocket(token);
     });
+
+    let socket : WebSocket | null = null;
+
+    function connectWebSocket(token: string) {
+
+        socket = new WebSocket(`ws://${window.location.host}/ws?token=${token}`);
+        
+        socket.onopen = () => {
+            console.log('WebSocket connection established.');
+        };
+
+        socket.onmessage = (event) => {
+            console.log('Message from server:', event.data);
+        }
+
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        socket.onclose = (event) => {
+            console.log('WebSocket connection closed:', event);
+        };
+    };
 </script>
 
 <h1>Admin Dashboard</h1>
