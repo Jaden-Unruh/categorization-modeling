@@ -4,42 +4,83 @@
 
     let step = 0;
 
-    let firstName = '';
-    let lastName = '';
-    let email = '';
-    let pronouns = '';
+    let numPpl = 1;
 
-    $: if (step === 0 && firstName && lastName) advance();
-    $: if (step === 1 && email) advance();
-    $: if (step === 2 && pronouns) advance();
+    let p1firstName = '';
+    let p1lastName = '';
+    let p1email = '';
+    let p1pronouns = '';
 
-    async function advance() {
+    let p2firstName = '';
+    let p2lastName = '';
+    let p2email = '';
+    let p2pronouns = '';
+
+    $: if (numPpl === 1 && step === 0 && p1firstName && p1lastName) advance();
+    $: if (numPpl === 1 && step === 1 && p1email) advance();
+    $: if (numPpl === 1 && step === 2 && p1pronouns) advance();
+
+    $: if (numPpl === 2 && step === 0 && p1firstName && p1lastName && p1email && p1pronouns) advance();
+    $: if (numPpl === 2 && step === 1 && p2firstName && p2lastName && p2email && p2pronouns) advance(2);
+
+    async function advance(steps?: number) {
         await tick();
-        step += 1;
+        step += steps || 1;
     }
 
     async function handleStart() {
-        const response = await fetch('/api/startSession', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "firstName": firstName,
-                "lastName": lastName,
-                "email": email,
-                "pronouns": pronouns
-            }) // TODO: backend support for this
-        });
+        if (numPpl === 1) {
+            const response = await fetch('/api/startSession', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "twoParticipants": false,
+                    "firstName": p1firstName,
+                    "lastName": p1lastName,
+                    "email": p1email,
+                    "pronouns": p1pronouns
+                }) // TODO: backend support for this
+            });
 
-        if (!response.ok)
-            return alert('There was an error contacting the server. Please try again later.');
+            if (!response.ok)
+                return alert('There was an error contacting the server. Please try again later.');
 
-        const sessionId = await response.json();
-        if (sessionId) {
-            window.location.href = `/session/${sessionId}`;
+            const sessionId = await response.json();
+            if (sessionId) {
+                window.location.href = `/session/${sessionId}`;
+            } else {
+                alert('Failed to start a new session. Please try again.');
+            }
         } else {
-            alert('Failed to start a new session. Please try again.');
+            const response = await fetch('/api/startSession', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "twoParticipants": true,
+                    "firstName1": p1firstName,
+                    "lastName1": p1lastName,
+                    "email1": p1email,
+                    "pronouns1": p1pronouns,
+                    "firstName2": p2firstName,
+                    "lastName2": p2lastName,
+                    "email2": p2email,
+                    "pronouns2": p2pronouns
+                })
+            });
+
+            if (!response.ok)
+                return alert('There was an error contacting the server. Please try again later.');
+
+            const sessionId = await response.json();
+            if (sessionId) {
+                window.location.href = `/session/${sessionId}`;
+            } else {
+                alert('Failed to start a new session. Please try again.');
+            }
         }
     }
 </script>
@@ -133,38 +174,87 @@
 
 <div class="main">
     <h1>Welcome.</h1>
-    
-    <div class="question" in:slide>
-        {#if step === 0}<div out:fade><p>Before we begin, what is your name?</p></div>{/if}
+
+    <div class="question">
+        {#if step === 0}<div out:fade><p>First, how many people are completing this trial?</p></div>{/if}
         <div class="inputs">
-            <label for="firstName">First:</label>
-            <input id="firstName" type="text" bind:value={firstName} />
-            <label for="lastName">Last:</label>
-            <input id="lastName" type="text" bind:value={lastName} />
+            <select name="numPpl" id="numPpl" bind:value={numPpl}>
+                <option value="1" selected>1 person</option>
+                <option value="2">2 people</option>
+            </select>
         </div>
     </div>
 
-    {#if step >= 1}
-        <div class="question" in:slide>
-            {#if step === 1}<div out:fade><p>Next, how can we contact you?</p></div>{/if}
+    {#if numPpl === 1}
+    
+        {#if step >= 1}
+            <div class="question" in:slide>
+                {#if step === 1}<div out:fade><p>And, what is your name?</p></div>{/if}
                 <div class="inputs">
-                <label for="email">Email:</label>
-                <input id="email" type="text" bind:value={email} />
+                    <label for="firstName">First:</label>
+                    <input id="firstName" type="text" bind:value={firstName} />
+                    <label for="lastName">Last:</label>
+                    <input id="lastName" type="text" bind:value={lastName} />
+                </div>
             </div>
-        </div>
+        {/if}
+
+        {#if step >= 2}
+            <div class="question" in:slide>
+                {#if step === 2}<div out:fade><p>Next, how can we contact you?</p></div>{/if}
+                <div class="inputs">
+                    <label for="email">Email:</label>
+                    <input id="email" type="text" bind:value={email} />
+                </div>
+            </div>
+        {/if}
+
+        {#if step >= 3}
+            <div class="question" in:slide>
+                {#if step === 3}<div out:fade><p>Finally, how should we refer to you?</p></div>{/if}
+                <div class="inputs">
+                    <label for="pronouns">Pronouns:</label>
+                    <input id="pronouns" type="text" bind:value={pronouns} />
+                </div>
+            </div>
+        {/if}
+
+    {:else}
+
+        {#if step >= 1}
+            <div class="question" in:slide>
+                {#if step === 1}<div out:fade><p>Please have one of the two participants fill in the following information.</p></div>{/if}
+                <div class="inputs">
+                    <label for="p1firstName">First Name:</label>
+                    <input id="p1firstName" type="text" bind:value={p1firstName} />
+                    <label for="p1lastName">Last Name:</label>
+                    <input id="p1lastName" type="text" bind:value={p1lastName} />
+                    <label for="p1email">Email:</label>
+                    <input id="p1email" type="text" bind:value={p1email} />
+                    <label for="p1pronouns">Pronouns:</label>
+                    <input id="p1pronouns" type="text" bind:value={p1pronouns} />
+                </div>
+            </div>
+        {/if}
+
+        {#if step >= 2}
+            <div class="question" in:slide>
+                {#if step === 2}<div out:fade><p>And now, please have the other participant complete their information</p></div>{/if}
+                <div class="inputs">
+                    <label for="p2firstName">First Name:</label>
+                    <input id="p2firstName" type="text" bind:value={p2firstName} />
+                    <label for="p2lastName">Last Name:</label>
+                    <input id="p2lastName" type="text" bind:value={p2lastName} />
+                    <label for="p2email">Email:</label>
+                    <input id="p2email" type="text" bind:value={p2email} />
+                    <label for="p2pronouns">Pronouns:</label>
+                    <input id="p2pronouns" type="text" bind:value={p2pronouns} />
+                </div>
+            </div>
+        {/if}
     {/if}
 
-    {#if step >= 2}
-        <div class="question" in:slide>
-            {#if step === 2}<div out:fade><p>Finally, how should we refer to you?</p></div>{/if}
-            <div class="inputs">
-                <label for="pronouns">Pronouns:</label>
-                <input id="pronouns" type="text" bind:value={pronouns} />
-            </div>
-        </div>
-    {/if}
-
-    {#if step >= 3}
+    {#if step >= 4}
         <button on:click={handleStart}>
             <span>Start Session</span>
         </button>

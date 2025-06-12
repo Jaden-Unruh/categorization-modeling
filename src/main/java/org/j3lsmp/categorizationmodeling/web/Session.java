@@ -18,10 +18,15 @@ public class Session {
 	public String sessionId;
 	
 	/**
-	 * Information about the user
+	 * Whether this session has two participants
+	 */
+	public boolean is2participants = false;
+	
+	/**
+	 * Information about the user(s)
 	 */
 	@SuppressWarnings("javadoc")
-	public String firstName, lastName, email, pronouns;
+	public String firstName, lastName, email, pronouns, p2firstName, p2lastName, p2email, p2pronouns;
 	
 	/**
 	 * Mapper used for JSON construction
@@ -70,6 +75,30 @@ public class Session {
 	}
 	
 	/**
+	 * Two participant constructor, sets up a session with the given details
+	 * @param id session id
+	 * @param p1first first participant's first name
+	 * @param p1last first participant's last name
+	 * @param p1email first participants email address
+	 * @param p1pronouns first participant's pronouns
+	 * @param p2first second participant's first name
+	 * @param p2last second participant's last name
+	 * @param p2email second participant's email address
+	 * @param p2pronouns second participant's pronouns
+	 */
+	Session(String id, String p1first, String p1last, String p1email, String p1pronouns, String p2first, String p2last, String p2email, String p2pronouns) {
+		this.sessionId = id;
+		this.firstName = p1first;
+		this.lastName = p1last;
+		this.email = p1email;
+		this.pronouns = p1pronouns;
+		this.p2firstName = p2first;
+		this.p2lastName = p2last;
+		this.p2email = p2email;
+		this.p2pronouns = p2pronouns;
+	}
+	
+	/**
 	 * Sets the live image given a 4 digit binary image id
 	 * @param imageCode 4 digit image id
 	 */
@@ -89,10 +118,24 @@ public class Session {
 			
 			ObjectNode sessionNode = MAPPER.createObjectNode();
 			sessionNode.put("id", sessionId)
-				.put("firstName", thisSession.firstName)
-				.put("lastName", thisSession.lastName)
-				.put("email", thisSession.email)
-				.put("pronouns", thisSession.pronouns);
+				.put("is2participants", thisSession.is2participants);
+				
+			if (thisSession.is2participants)
+				sessionNode
+					.put("p1firstName", thisSession.firstName)
+					.put("p1lastName", thisSession.lastName)
+					.put("p1email", thisSession.email)
+					.put("p1pronouns", thisSession.pronouns)
+					.put("p2firstName", thisSession.p2firstName)
+					.put("p2lastName", thisSession.p2lastName)
+					.put("p2email", thisSession.p2email)
+					.put("p2pronouns", thisSession.p2pronouns);
+			else
+				sessionNode
+					.put("firstName", thisSession.firstName)
+					.put("lastName", thisSession.lastName)
+					.put("email", thisSession.email)
+					.put("pronouns", thisSession.pronouns);
 			
 			ArrayNode sessionTrials = MAPPER.createArrayNode();
 			for (Response res : thisSession.responses) {

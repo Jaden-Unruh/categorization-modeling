@@ -73,7 +73,7 @@ public class UserController {
 		if (thisSession == null)
 			return ResponseEntity.internalServerError().build();
 		
-		response.put("firstName", thisSession.firstName);
+		response.put("firstName", (thisSession.is2participants) ? String.format("%s & %s", thisSession.firstName, thisSession.p2firstName) : thisSession.firstName);
 		response.put("trialNumber", thisModel.numAnswered);
 		
 		return ResponseEntity.ok(response);
@@ -110,16 +110,25 @@ public class UserController {
 	public ResponseEntity<Map<String, String>> getTrial(@PathVariable String sessionId, @PathVariable String trialNum) {
 		Map<String, String> response = new HashMap<>();
 		
-		String imageNum = "1011";
-		boolean isEvil = false;
+		int trial = Integer.parseInt(trialNum);
 		
-		Server.ALL_SESSIONS.get(sessionId).lastLoadTime = System.nanoTime();
+		if (trial < 30) {
 		
-		Server.ALL_SESSIONS.get(sessionId).setImage(imageNum);
-		Server.ALL_SESSIONS.get(sessionId).currentImageEvil = isEvil;
-		
-		response.put("imageUrl", "/api/trialImages/" + imageNum + ".svg");
-		response.put("isEvil", isEvil ? "true" : "false");
+			
+			
+			String imageNum = "1011";
+			boolean isEvil = false;
+			
+			Server.ALL_SESSIONS.get(sessionId).lastLoadTime = System.nanoTime();
+			
+			Server.ALL_SESSIONS.get(sessionId).setImage(imageNum);
+			Server.ALL_SESSIONS.get(sessionId).currentImageEvil = isEvil;
+			
+			response.put("imageUrl", "/api/trialImages/" + imageNum + ".svg");
+			response.put("isEvil", isEvil ? "true" : "false");
+		} else {
+			
+		}
 		
 		return ResponseEntity.ok(response);
 	}
