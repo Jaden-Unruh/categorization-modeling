@@ -224,8 +224,9 @@ public class Model {
 				updateWeights(weights, traits, isDangerous);
 			}
 		}
+		double ratio = (double) correctCount / totalCount;
 		if (doPrints)
-			System.out.printf("Of %d trials, %d were predicted correctly, for a %f ratio", totalCount, correctCount, (double) correctCount / totalCount);
-		return (double) correctCount / totalCount;
+			System.out.printf("Of %d trials, %d were predicted correctly, for a %f ratio", totalCount, correctCount, ratio);
+		return ratio;
 	}
 }

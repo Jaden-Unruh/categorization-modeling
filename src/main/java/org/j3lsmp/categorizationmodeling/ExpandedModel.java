@@ -137,4 +137,23 @@ public class ExpandedModel {
 			ret *= i;
 		return ret;
 	}
+
+	public static boolean[] traitsFromStr(String input, int numTraits) {
+		boolean[] ret = new boolean[numTraits];
+		for (int i = 0; i < numTraits; i++)
+			ret[i] = input.charAt(i) == '1';
+		return ret;
+	}
+
+	static ExpandedModel combineExpandedModel(ExpandedModel participantOne, ExpandedModel participantTwo) {
+		ExpandedModel ret = new ExpandedModel();
+
+		for (int i = 0; i < ret.weights.length; i++) {
+			ret.weights[i] = participantOne.weights[i] + participantTwo.weights[i];
+		}
+
+		normalize(ret.weights);
+
+		return ret;
+	}
 }
